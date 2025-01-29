@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,14 @@ Route::middleware( array( 'auth' ) )->group(
 		Route::get( 'dashboard/resume/add-new', array( ResumeController::class, 'show' ) )->name( 'resume.new' );
 		Route::get( 'dashboard/resumes', array( ResumeController::class, 'index' ) )->name( 'resumes' );
 		Route::delete( '/resume/{id}', array( ResumeController::class, 'destroy' ) )->name( 'resume.destroy' );
+	}
+);
+
+// Jobs Route.
+
+Route::middleware( array( 'auth' ) )->group(
+	function () {
+		Route::resource( 'dashboard/opportunities', OpportunityController::class );
 	}
 );
 

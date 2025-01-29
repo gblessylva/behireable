@@ -13,6 +13,7 @@ import {
     CogIcon,
     AcademicCapIcon
 } from '@heroicons/react/24/outline';
+import { resourceLimits } from 'worker_threads';
 
 interface SidebarLayoutProps {
     header?: ReactNode;
@@ -22,7 +23,7 @@ interface SidebarLayoutProps {
 const navigation = [
     { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon },
     { name: 'Resume Analysis', href: route('resumes'), icon: DocumentTextIcon },
-    { name: 'Job Matches', href: route('dashboard'), icon: BriefcaseIcon },
+    { name: 'Job Matches', href: route('opportunities.index'), icon: BriefcaseIcon },
     { name: 'Application Tracker', href: route('dashboard'), icon: ClipboardIcon },
     { name: 'Reources', href: route('dashboard'), icon: BookOpenIcon },
     { name: 'Notifications', href: route('dashboard'), icon: BellIcon },
