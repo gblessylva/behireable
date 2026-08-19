@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -13,8 +14,8 @@ use App\Http\Controllers\User\ResumeController;
 |--------------------------------------------------------------------------
 |
 | Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
+| routes are loaded by the RouteServiceProvider within the web middleware
+| group. Now create something great!
 |
 */
 Route::get(
@@ -34,15 +35,12 @@ Route::get(
 
 Route::get(
 	'/dashboard',
-	function () {
-		return Inertia::render( 'Dashboard' );
-	}
+	array( DashboardController::class, 'index' )
 )->middleware( array( 'auth', 'verified' ) )->name( 'dashboard' );
 
 /**
  * Resume Routes
  */
-
 Route::middleware( array( 'auth' ) )->group(
 	function () {
 		Route::post( '/resume/upload', array( ResumeController::class, 'store' ) )->name( 'resume.upload' );
@@ -53,7 +51,6 @@ Route::middleware( array( 'auth' ) )->group(
 );
 
 // Jobs Route.
-
 Route::middleware( array( 'auth' ) )->group(
 	function () {
 		Route::resource( 'dashboard/opportunities', OpportunityController::class );
