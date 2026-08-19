@@ -59,12 +59,37 @@ Route::middleware( array( 'auth' ) )->group(
 
 Route::middleware( 'auth' )->group(
 	function () {
-		Route::get( '/profile', array( ProfileController::class, 'edit' ) )->name( 'profile.edit' );
-		Route::patch( '/profile', array( ProfileController::class, 'update' ) )->name( 'profile.update' );
-		Route::delete( '/profile', array( ProfileController::class, 'destroy' ) )->name( 'profile.destroy' );
+		Route::get(
+			'/dashboard/profile',
+			array( ProfileController::class, 'edit' )
+		)->name( 'profile.edit' );
 
-		Route::get( '/profile/setup', array( ProfileController::class, 'setup' ) )->name( 'profile.setup' );
-		Route::post( '/profile/setup/{step}', array( ProfileController::class, 'saveStep' ) )->name( 'profile.setup.saveStep' );
+		Route::patch(
+			'/dashboard/profile',
+			array( ProfileController::class, 'update' )
+		)->name( 'profile.update' );
+
+		Route::delete(
+			'/dashboard/profile',
+			array( ProfileController::class, 'destroy' )
+		)->name( 'profile.destroy' );
+
+		Route::get(
+			'/dashboard/profile/setup',
+			array( ProfileController::class, 'setup' )
+		)->name( 'profile.setup' );
+
+		// IMPORTANT:
+		// Keep the explicit "completed" route before the {step} route.
+		Route::post(
+			'/dashboard/profile/setup/completed',
+			array( ProfileController::class, 'complete' )
+		)->name( 'profile.setup.complete' );
+
+		Route::post(
+			'/dashboard/profile/setup/{step}',
+			array( ProfileController::class, 'saveStep' )
+		)->name( 'profile.setup.saveStep' );
 	}
 );
 
