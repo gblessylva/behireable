@@ -24,12 +24,13 @@ const navigation = [
     { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon },
     { name: 'Resume Analysis', href: route('resumes'), icon: DocumentTextIcon },
     { name: 'Job Matches', href: route('opportunities.index'), icon: BriefcaseIcon },
-    { name: 'Application Tracker', href: route('dashboard'), icon: ClipboardIcon },
+    { name: 'Applications', href: route('dashboard'), icon: ClipboardIcon },
+    { name: 'Profile', href: route('dashboard'), icon: UsersIcon },
     { name: 'Reources', href: route('dashboard'), icon: BookOpenIcon },
     { name: 'Notifications', href: route('dashboard'), icon: BellIcon },
     { name: 'Community', href: route('dashboard'), icon: UserGroupIcon },
     { name: 'Settings', href: route('dashboard'), icon: CogIcon },
-    { name: 'Profile', href: route('dashboard'), icon: UsersIcon },
+    
 ];
 
 export default function SidebarLayout({ header, children }: PropsWithChildren<SidebarLayoutProps>) {
