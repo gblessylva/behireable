@@ -1,4 +1,4 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SidebarLayout from '@/Layouts/SidebarLayout';
 import { PageProps } from '@/types';
 import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
@@ -10,14 +10,21 @@ export default function Edit({
     status,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Profile
-                </h2>
-            }
-        >
-            <Head title="Profile" />
+        <SidebarLayout
+                    header={
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                Profile
+                            </h2>
+        
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Your career journey starts here.
+                            </p>
+                        </div>
+                    }
+                >
+                    <Head title="Profile" />
+    
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
@@ -38,6 +45,6 @@ export default function Edit({
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </SidebarLayout>
     );
 }

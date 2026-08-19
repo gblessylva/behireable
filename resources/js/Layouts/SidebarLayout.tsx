@@ -25,7 +25,7 @@ const navigation = [
     { name: 'Resume Analysis', href: route('resumes'), icon: DocumentTextIcon },
     { name: 'Job Matches', href: route('opportunities.index'), icon: BriefcaseIcon },
     { name: 'Applications', href: route('dashboard'), icon: ClipboardIcon },
-    { name: 'Profile', href: route('dashboard'), icon: UsersIcon },
+    { name: 'Profile', href: route('profile.edit'), icon: UsersIcon },
     { name: 'Reources', href: route('dashboard'), icon: BookOpenIcon },
     { name: 'Notifications', href: route('dashboard'), icon: BellIcon },
     { name: 'Community', href: route('dashboard'), icon: UserGroupIcon },
@@ -35,7 +35,6 @@ const navigation = [
 
 export default function SidebarLayout({ header, children }: PropsWithChildren<SidebarLayoutProps>) {
     const user = usePage().props.auth.user;
-    console.log(route());
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <Toaster position="top-right" />

@@ -5,15 +5,25 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 
-const BasicInformation = ({ onNext, formData, currentStep }: { onNext: (data: any) => void; formData: any; currentStep: string }) => {
-    const user = usePage().props.auth.user;
-    const profile = (user as any).profile;
-    const { basic_information } = profile;
+interface BasicInformationProps {
+    onNext: (data: any) => void;
+    formData?: any;
+    currentStep: string;
+    profile?: any;
+}
+
+const BasicInformation = ({
+    onNext,
+    formData,
+    currentStep,
+    profile = {},
+}: BasicInformationProps) => {
+    const { basic_information = {} } = profile;
 
     const { data, setData, post, processing, errors } = useForm({
         phone: basic_information?.phone || '',
-        location:basic_information?.location || '',
-        bio:basic_information?.bio || '',
+        location: basic_information?.location || '',
+        bio: basic_information?.bio || '',
     });
     
 

@@ -2,199 +2,131 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\User\Profile;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Profile;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class ProfileController extends Controller {
 
 	/**
-	 * Display the user's profile form.
+	 * Display the user's profile.
 	 */
-	public function edit( Request $request ): Response {
+	public function edit( Request $request ) {
+		$profile = $request->user()->profile;
+
 		return Inertia::render(
 			'Profile/Edit',
 			array(
-				'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-				'status'          => session( 'status' ),
+				'profile' => $profile,
 			)
 		);
 	}
 
 	/**
-	 * Update the user's profile information.
+	 * Update the user's profile.
 	 */
-	public function update( ProfileUpdateRequest $request ): RedirectResponse {
-		$user = $request->user();
-		$user->fill( $request->validated() );
-
-		if ( $user->isDirty( 'email' ) ) {
-			$user->email_verified_at = null;
-		}
-
-		$user->save();
-
-		return Redirect::route( 'profile.edit' );
-	}
-
-	/**
-	 * Delete the user's account.
-	 */
-	public function destroy( Request $request ): RedirectResponse {
+	public function update( Request $request ) {
 		$request->validate(
 			array(
-				'password' => array( 'required', 'current_password' ),
+				'basic_information' => array( 'nullable', 'array' ),
+				'skills'            => array( 'nullable', 'array' ),
+				'experience'        => array( 'nullable', 'array' ),
+				'education'         => array( 'nullable', 'array' ),
+				'preferences'       => array( 'nullable', 'array' ),
+				'summary'           => array( 'nullable', 'array' ),
+				'social_profiles'   => array( 'nullable', 'array' ),
 			)
 		);
 
-		$user = $request->user();
+		$profile = Profile::updateOrCreate(
+			array(
+				'user_id' => $request->user()->id,
+			),
+			array(
+				'basic_information' => $request->input( 'basic_information', array() ),
+				'skills'            => $request->input( 'skills', array() ),
+				'experience'        => $request->input( 'experience', array() ),
+				'education'         => $request->input( 'education', array() ),
+				'preferences'       => $request->input( 'preferences', array() ),
+				'summary'           => $request->input( 'summary', array() ),
+				'social_profiles'   => $request->input( 'social_profiles', array() ),
+			)
+		);
 
-		Auth::logout();
-
-		$user->delete();
-
-		$request->session()->invalidate();
-		$request->session()->regenerateToken();
-
-		return Redirect::to( '/' );
+		return redirect()
+			->route( 'profile.edit' )
+			->with( 'success', 'Profile updated successfully.' );
 	}
 
 	/**
-	 * Display the user's profile setup form.
+	 * Display the profile setup wizard.
 	 */
-	public function setup(): Response {
+	public function setup( Request $request ) {
+		$profile = $request->user()->profile;
+
 		return Inertia::render(
 			'Profile/Setup',
 			array(
-				'steps' => array(
-					'Basic Information',
-					'Skills & Expertise',
-					'Work Experience',
-					'Education',
-					'Career Preferences',
-					'Profile Photo & Summary',
-					'Review',
+				'profile' => $profile,
+				'steps'   => array(
+					'basic-information',
+					'professional-details',
+					'skills',
+					'preferences',
+					'education',
+					'social-profiles',
 				),
-				'user'  => Auth::user()->load( 'profile' ),
 			)
 		);
 	}
 
 	/**
-	 * Save a step in the profile setup process.
-	 *
-	 * @param Request $request
-	 * @param string  $step
+	 * Save an individual profile setup step.
 	 */
-	public function saveStep( Request $request, $step ) {
-		$user = $request->user();
-
-		// Find or create the profile for the authenticated user.
+	public function saveStep( Request $request, string $step ) {
 		$profile = Profile::firstOrCreate(
-			array( 'user_id' => $user->id ),
 			array(
-				'basic_information' => null,
-				'experience'        => null,
-				'skills'            => null,
-				'education'         => null,
-				'preferences'       => null,
-				'summary'           => null,
+				'user_id' => $request->user()->id,
 			)
 		);
 
-		// Handle step-specific data saving.
-		switch ( $step ) {
-			case 'basic-information': // Basic Information.
-				$validated                  = $request->validate(
-					array(
-						'phone'    => 'required|string|max:255',
-						'location' => 'required|string|max:255',
-						'bio'      => 'required|string|max:1055',
-					)
-				);
-				$profile->basic_information = $validated;
-				break;
-			case 'experience':
-				$validated           = $request->validate(
-					array(
-						'title'            => 'required|string|max:255',
-						'experience_years' => 'nullable|string',
-						'industry'         => 'nullable|string',
-					)
-				);
-				$profile->experience = $validated;
-				break;
-			case 'skills':
-				$validated = $request->validate(
-					array(
-						'skills' => 'required|array',
+		$stepMap = array(
+			'basic-information'    => 'basic_information',
+			'professional-details' => 'experience',
+			'skills'               => 'skills',
+			'preferences'          => 'preferences',
+			'education'            => 'education',
+			'social-profiles'      => 'social_profiles',
+		);
 
-					)
-				);
-				$profile->skills = $validated;
-				break;
-
-			case 'social_profiles': // Social Profiles
-				$validated                = $request->validate(
-					array(
-						'linkedin' => 'nullable|string',
-						'github'   => 'nullable|string',
-						'twitter'  => 'nullable|string',
-					)
-				);
-				$profile->social_profiles = $validated;
-				break;
-
-			case 'preferences': // Skills & Preferences.
-				$validated = $request->validate(
-					array(
-						'preferences'        => 'required|array',
-						'salary_expectation' => 'nullable|integer',
-
-					)
-				);
-
-				$profile->preferences = $validated;
-				break;
-
-			case 'education':
-				$validated          = $request->validate(
-					array(
-						'education' => 'required|array',
-					)
-				);
-				$profile->education = $validated;
-				break;
-			case 'completed':
-				$profile->completed = true;
-				break;
-			default:
-				return response()->json(
-					array(
-						'error' => 'Invalid step',
-						$step,
-					),
-					400
-				);
+		if ( ! array_key_exists( $step, $stepMap ) ) {
+			abort( 404 );
 		}
 
-		// Save the updated profile.
-		if ( ! $profile->save() ) {
-			return response()->json(
-				array(
-					'error' => 'Failed to save profile details',
-				),
-				500
-			);
-		}
+		$profileField = $stepMap[ $step ];
+
+		$profile->$profileField = $request->input( 'data', array() );
+
 		$profile->save();
 
-		return redirect()->back()->with( 'success', ucfirst( str_replace( '-', ' ', $step ) ) . ' saved successfully.' );
+		return back()->with( 'success', 'Step saved successfully.' );
+	}
+
+	/**
+	 * Mark profile setup as completed.
+	 */
+	public function complete( Request $request ) {
+		$profile = Profile::firstOrCreate(
+			array(
+				'user_id' => $request->user()->id,
+			)
+		);
+
+		$profile->completed = true;
+		$profile->save();
+
+		return redirect()
+			->route( 'dashboard' )
+			->with( 'success', 'Your profile has been completed.' );
 	}
 }
