@@ -6,10 +6,13 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { toast } from 'react-hot-toast';
 
-const SocialProfiles = ({ onNext, formData, currentStep }: { onNext: (data: any) => void; formData: any; currentStep: string }) => {
+interface SocialProfileInterface {
+onNext: (data: Record<string, unknown>) => void;
+    profile?: any;
+}
+const SocialProfiles = ({ onNext, profile ={} }: SocialProfileInterface ) => {
     const user = usePage().props.auth.user;
-    const profile = (user as any).profile;
-    const existingSocials = profile?.social_profiles || {};
+    const existingSocials = profile.social_profiles || {};
 
 
     const { data, setData, post, processing, errors } = useForm({
@@ -20,18 +23,7 @@ const SocialProfiles = ({ onNext, formData, currentStep }: { onNext: (data: any)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/profile/setup/${currentStep}`, {
-            onSuccess: (response) => {
-                if (response?.props?.flash?.success) {
-                    toast.success(response.props.flash.success);
-                    
-                }
-                onNext({ social_profiles: data });
-            },
-            onError: () => {
-                toast.error('Failed to save social profiles. Please try again.');
-            },
-        });
+         onNext({ social_profiles: data });
     };
 
     return (

@@ -46,7 +46,7 @@ class ResumeController extends Controller {
 	public function show( ) {
 		$resumes = auth()->user()->resumes()->latest()->get();
 		return Inertia::render(
-			'User/Builder',
+			'User/Resume/New',
 			array(
 				'resumes' => $resumes,
 			)

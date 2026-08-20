@@ -11,10 +11,13 @@ const commonSkills = [
     'Project Management', 'Data Analysis', 'Marketing', 'Sales',
     'Customer Service', 'Leadership', 'Communication', 'Problem Solving',
 ];
-
-const Skills = ({ onNext, formData, currentStep }: { onNext: (data: any) => void; formData: any; currentStep: string }) => {
-    const user = usePage().props.auth.user;
-    const profile = (user as any).profile;
+interface skillsProps {
+onNext: (data: Record<string, unknown>) => void;
+    profile?: any;
+}
+const Skills = ({ 
+    onNext, 
+    profile = {} }: skillsProps) => {
     const existingSkills = profile?.skills?.skills || [];
     const [query, setQuery] = useState('');
     const [selectedSkills, setSelectedSkills] = useState<string[]>(existingSkills);
@@ -51,19 +54,7 @@ const Skills = ({ onNext, formData, currentStep }: { onNext: (data: any) => void
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/profile/setup/${currentStep}`, {
-            
-            onSuccess: (response) => {
-                if (response?.props?.flash?.success) {
-                    toast.success(response.props.flash.success);
-                    
-                }
-                onNext( { skills: data });
-            },
-            onError: () => {
-                toast.error('Failed to save skills. Please try again.');
-            },
-        });
+        onNext( { skills: data });
     };
 
     return (

@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import SidebarLayout from '@/Layouts/SidebarLayout';
 import OnboardingProgress from '@/Components/Dashboard/OnboardingProgress';
+import OnboardingCard from '@/Components/Dashboard/OnboardingCard';
 
 interface User {
     name: string;
@@ -97,7 +98,38 @@ export default function Dashboard({
 
                         {/* Resume */}
                         <div>
-                            <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+                            <div className="space-y-4">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Todo
+                                    </h2>
+
+                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        Complete these steps to get the most out of BeHirable.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <OnboardingCard
+                                        title="Complete your profile"
+                                        description="Tell us about your experience, skills and career preferences so we can personalize your BeHirable experience."
+                                        completed={onboarding.profileCompleted}
+                                        href={route('profile.setup')}
+                                        actionLabel="Complete Profile"
+                                        icon="👤"
+                                    />
+
+                                    <OnboardingCard
+                                        title="Upload your resume"
+                                        description="Upload your latest resume so we can analyze it and help you discover better job opportunities."
+                                        completed={onboarding.resumeUploaded}
+                                        href={route('resume.new')}
+                                        actionLabel="Upload Resume"
+                                        icon="📄"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
 
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                     Your Resume
@@ -166,6 +198,7 @@ export default function Dashboard({
                                 )}
 
                             </div>
+                            
                         </div>
 
                     </div>

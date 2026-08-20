@@ -18,10 +18,13 @@ const workLocations = [
     { id: 'onsite', label: 'On-site' },
 ];
 
-const Preferences = ({ onNext, formData, currentStep }: { onNext: (data: any) => void; formData: any; currentStep: string }) => {
-    const user = usePage().props.auth.user;
-    const profile = (user as any).profile;
-    const existingPreferences = profile?.preferences.preferences || [];
+interface PreferencesInterface {
+    onNext: (data: Record<string, unknown>) => void;
+    profile?: any;
+}
+const Preferences = ({ onNext, profile= {}}:  PreferencesInterface) => {
+    console.log(profile)
+    const existingPreferences = profile.preferences?.preferences || [];
     const { data, setData, post, processing, errors } = useForm({
         preferences: existingPreferences.length > 0 ? existingPreferences : [],
         salary_expectation: profile?.preferences?.salary_expectation || '',
@@ -56,19 +59,7 @@ const Preferences = ({ onNext, formData, currentStep }: { onNext: (data: any) =>
             toast.error('Please select at least one preference');
             return;
         }
-
-        post(`/profile/setup/${currentStep}`, {
-            onSuccess: (response) => {
-                if (response?.props?.flash?.success) {
-                    toast.success(response.props.flash.success);
-                    
-                }
-                onNext({ preferences: data });
-            },
-            onError: (error) => {
-                toast.error('Failed to save preferences. Please try again.');
-            },
-        });
+        onNext({ preferences: data });
     };
 
     return (

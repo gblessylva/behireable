@@ -33,6 +33,47 @@ interface SetupStep {
 interface SetupProps {
     profile: Profile | null;
 }
+
+const hasStepData = (
+    profile: Profile,
+    stepId: string
+): boolean => {
+    switch (stepId) {
+        case 'basic-information':
+            return Object.keys(
+                profile.basic_information ?? {}
+            ).length > 0;
+
+        case 'professional-details':
+            return Object.keys(
+                profile.experience ?? {}
+            ).length > 0;
+
+        case 'skills':
+            return Object.keys(
+                profile.skills ?? {}
+            ).length > 0;
+
+        case 'preferences':
+            return Object.keys(
+                profile.preferences ?? {}
+            ).length > 0;
+
+        case 'education':
+            return Object.keys(
+                profile.education ?? {}
+            ).length > 0;
+
+        case 'social-profiles':
+            return Object.keys(
+                profile.social_profiles ?? {}
+            ).length > 0;
+
+        default:
+            return false;
+    }
+};
+
 const emptyProfile: Profile = {
     basic_information: {},
     experience: {},
@@ -83,6 +124,15 @@ const steps: SetupStep[] = [
 
 export default function Setup({ profile }: SetupProps) {
     const profileData = profile ?? emptyProfile;
+    const firstIncompleteStep = steps.findIndex(
+        (step) => !hasStepData(profileData, step.id)
+    );
+
+    const initialStep =
+        firstIncompleteStep === -1
+            ? 0
+            : firstIncompleteStep;
+
     const [currentStep, setCurrentStep] = useState(0);
     const [processing, setProcessing] = useState(false);
 
@@ -175,7 +225,6 @@ export default function Setup({ profile }: SetupProps) {
                     <BasicInformation
                         profile={profileData}
                         onNext={saveStep}
-                        currentStep={step.id}
                     />
                 );
 
@@ -184,7 +233,6 @@ export default function Setup({ profile }: SetupProps) {
                     <ProfessionalDetails
                         profile={profileData}
                         onNext={saveStep}
-                        processing={processing}
                     />
                 );
 
@@ -193,7 +241,6 @@ export default function Setup({ profile }: SetupProps) {
                     <Skills
                         profile={profileData}
                         onNext={saveStep}
-                        processing={processing}
                     />
                 );
 
@@ -202,7 +249,6 @@ export default function Setup({ profile }: SetupProps) {
                     <Preferences
                         profile={profileData}
                         onNext={saveStep}
-                        processing={processing}
                     />
                 );
 
@@ -211,7 +257,6 @@ export default function Setup({ profile }: SetupProps) {
                     <Education
                         profile={profileData}
                         onNext={saveStep}
-                        processing={processing}
                     />
                 );
 
@@ -220,7 +265,6 @@ export default function Setup({ profile }: SetupProps) {
                     <SocialProfiles
                         profile={profileData}
                         onNext={saveStep}
-                        processing={processing}
                     />
                 );
 
@@ -234,7 +278,7 @@ export default function Setup({ profile }: SetupProps) {
     );
 
     return (
-    <>
+        <>
             <Head title="Complete Your Profile" />
 
             <div className="min-h-screen bg-gray-50 py-10 dark:bg-gray-950">
@@ -281,29 +325,27 @@ export default function Setup({ profile }: SetupProps) {
                     <div className="mb-8 hidden gap-2 overflow-x-auto pb-2 md:flex">
                         {steps.map((item, index) => {
                             const active = index === currentStep;
-                            const completed = index < currentStep;
+                            const completed = hasStepData(profileData, item.id);
 
                             return (
                                 <button
                                     key={item.id}
                                     type="button"
                                     onClick={() => {
-                                        if (index <= currentStep) {
+                                        if (completed || index === currentStep) {
                                             setCurrentStep(index);
                                         }
                                     }}
-                                    disabled={index > currentStep}
-                                    className={`flex min-w-max items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-                                        active
-                                            ? 'bg-lime-700 text-white'
-                                            : completed
-                                                ? 'bg-lime-100 text-lime-800 dark:bg-lime-950 dark:text-lime-400'
-                                                : 'bg-gray-100 text-gray-400 dark:bg-gray-900 dark:text-gray-600'
-                                    } ${
-                                        index > currentStep
+                                    disabled={!completed && index !== currentStep}
+                                    className={`flex min-w-max items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${active
+                                        ? 'bg-lime-700 text-white'
+                                        : completed
+                                            ? 'bg-lime-100 text-lime-800 dark:bg-lime-950 dark:text-lime-400'
+                                            : 'bg-gray-100 text-gray-400 dark:bg-gray-900 dark:text-gray-600'
+                                        } ${index > currentStep
                                             ? 'cursor-not-allowed'
                                             : 'cursor-pointer'
-                                    }`}
+                                        }`}
                                 >
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs">
                                         {completed ? '✓' : index + 1}
@@ -364,6 +406,6 @@ export default function Setup({ profile }: SetupProps) {
 
                 </div>
             </div>
-            </>
+        </>
     );
 }

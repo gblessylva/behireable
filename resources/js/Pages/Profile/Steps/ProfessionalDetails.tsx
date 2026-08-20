@@ -23,11 +23,16 @@ const industries = [
     'Real Estate',
     'Transportation',
 ];
+interface ExperienceProps {
+    onNext: (data: Record<string, unknown>) => void;
+    profile?: any;
+}
+const ProfessionalDetails = ({
+    onNext,
+    profile = {},
+}: ExperienceProps) => {
 
-const ProfessionalDetails = ({ onNext, formData, currentStep }: { onNext: (data: any) => void; formData: any; currentStep: string }) => {
     const [query, setQuery] = useState('');
-    const user = usePage().props.auth.user;
-    const profile = (user as any).profile;
     const { experience } = profile || {};
 
     const { data, setData, post, processing, errors } = useForm({
@@ -44,10 +49,8 @@ const ProfessionalDetails = ({ onNext, formData, currentStep }: { onNext: (data:
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/profile/setup/${currentStep}`, {
-            onSuccess: (response) => {
-                onNext({ experience: data });
-            },
+        onNext({
+            experience: data,
         });
     };
 

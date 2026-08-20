@@ -14,14 +14,17 @@ interface Education {
     start_date: string;
     end_date: string;
     current: boolean;
+    
+}
+interface EducationInterface {
+onNext: (data: Record<string, unknown>) => void;
+    profile?: any;
 }
 
-const Education = ({ onNext, formData, currentStep }: { onNext: (data: any) => void; formData: any; currentStep: string }) => {
-    const user = usePage().props.auth.user;
-    const profile = (user as any).profile;
-    // Fix the data retrieval and ensure it's always an array
-    const existingEducation = Array.isArray(profile?.education) 
-        ? profile.education 
+const Education = ({ onNext, profile = {}}: EducationInterface ) => {
+
+    const existingEducation = Array.isArray(profile.education) 
+        ? profile.education
         : (profile?.education?.education || []);
 
     const [educationList, setEducationList] = useState<Education[]>(existingEducation);
@@ -72,17 +75,7 @@ const Education = ({ onNext, formData, currentStep }: { onNext: (data: any) => v
             return;
         }
 
-        post(`/profile/setup/${currentStep}`, {
-            onSuccess: (response) => {
-                if (response?.props?.flash?.success) {
-                    toast.success(response.props.flash.success);
-                } 
-                onNext({ education: data });
-            },
-            onError: () => {
-                toast.error('Failed to save education details. Please try again.');
-            },
-        });
+        onNext({ education: data });
     };
 
     return (

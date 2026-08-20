@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Profile;
+use App\Models\User\Profile;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,6 +20,13 @@ class ProfileController extends Controller {
 				'profile' => $profile,
 			)
 		);
+	}
+
+	private function isProfileComplete( Profile $profile ): bool {
+		return ! empty( $profile->basic_information )
+		&& ! empty( $profile->experience )
+		&& ! empty( $profile->skills )
+		&& ! empty( $profile->preferences );
 	}
 
 	/**
@@ -90,7 +97,7 @@ class ProfileController extends Controller {
 			)
 		);
 
-		$stepMap = array(
+		$step_map = array(
 			'basic-information'    => 'basic_information',
 			'professional-details' => 'experience',
 			'skills'               => 'skills',
@@ -99,18 +106,31 @@ class ProfileController extends Controller {
 			'social-profiles'      => 'social_profiles',
 		);
 
-		if ( ! array_key_exists( $step, $stepMap ) ) {
+		if ( ! array_key_exists( $step, $step_map ) ) {
 			abort( 404 );
 		}
 
-		$profileField = $stepMap[ $step ];
+		$profile_field = $step_map[ $step ];
 
-		$profile->$profileField = $request->input( 'data', array() );
+		$data = $request->input( 'data', array() );
+
+		if (
+		is_array( $data ) &&
+		array_key_exists( $profile_field, $data )
+		) {
+			$profile->$profile_field = $data[ $profile_field ];
+		} else {
+			$profile->$profile_field = $data;
+		}
 
 		$profile->save();
 
-		return back()->with( 'success', 'Step saved successfully.' );
+		return back()->with(
+			'success',
+			'Step saved successfully.'
+		);
 	}
+
 
 	/**
 	 * Mark profile setup as completed.
@@ -122,11 +142,21 @@ class ProfileController extends Controller {
 			)
 		);
 
+		if ( ! $this->isProfileComplete( $profile ) ) {
+			return back()->with(
+				'error',
+				'Please complete the required profile sections before continuing.'
+			);
+		}
+
 		$profile->completed = true;
 		$profile->save();
 
 		return redirect()
-			->route( 'dashboard' )
-			->with( 'success', 'Your profile has been completed.' );
+		->route( 'dashboard' )
+		->with(
+			'success',
+			'Your profile has been completed.'
+		);
 	}
 }
