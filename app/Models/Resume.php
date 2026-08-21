@@ -10,11 +10,18 @@ class Resume extends Model {
 	use HasFactory;
 
 	protected $fillable = array(
+		'user_id',
 		'file_path',
 		'original_file_name',
-		'user_id',
+		'extraction_status',
+		'extracted_text',
+		'normalized_text',
+		'extraction_error',
+		'extracted_at',
 	);
-
+	protected $casts    = array(
+		'extracted_at' => 'datetime',
+	);
 	public function user() {
 		return $this->belongsTo( User::class );
 	}

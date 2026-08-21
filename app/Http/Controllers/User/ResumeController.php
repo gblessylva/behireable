@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Resume;
 use Inertia\Inertia;
+use App\Jobs\ExtractResumeText;
 
 class ResumeController extends Controller {
 
@@ -27,6 +28,7 @@ class ResumeController extends Controller {
 				'original_file_name' => $originalName,
 			)
 		);
+		ExtractResumeText::dispatch($resume);
 
 		return back()->with( 'success', 'Resume uploaded successfully!' );
 	}

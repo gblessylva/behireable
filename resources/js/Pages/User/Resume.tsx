@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import SidebarLayout from '@/Layouts/SidebarLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 import {
     DocumentTextIcon,
     ChartBarIcon,
@@ -10,23 +11,27 @@ import {
     DocumentArrowUpIcon,
 } from '@heroicons/react/24/outline';
 
-export default function Resume() {
+interface Resume {
+    id: number;
+    original_file_name: string;
+    file_path: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface ResumePageProps {
+    resumes: Resume[];
+}
+
+export default function Resume({ resumes }: ResumePageProps) {
     const [activeTab, setActiveTab] = useState('current');
 
-    // Dummy data for demonstration
-    const resumeScore = {
-        overall: 85,
-        skills: 90,
-        experience: 82,
-        education: 88,
-        formatting: 80,
-    };
+    const latestResume = resumes.length > 0
+        ? resumes[0]
+        : null;
 
-    const mockResume = {
-        title: "Software Engineer Resume",
-        lastUpdated: "2024-01-15",
-        status: "Active",
-    };
+    const [resumeToDelete, setResumeToDelete] =
+        useState<ResumeItem | null>(null);
 
     return (
         <SidebarLayout>
@@ -46,31 +51,54 @@ export default function Resume() {
                 </div>
 
                 {/* Quick Stats */}
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <div className="flex items-center">
                             <DocumentTextIcon className="h-8 w-8 text-blue-500" />
+
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Resumes</p>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">2</h3>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    Uploaded Resumes
+                                </p>
+
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    {resumes.length}
+                                </h3>
                             </div>
                         </div>
                     </div>
+
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <div className="flex items-center">
                             <ChartBarIcon className="h-8 w-8 text-green-500" />
+
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Average Score</p>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">85%</h3>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    Resume Analysis
+                                </p>
+
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    Not analyzed
+                                </h3>
                             </div>
                         </div>
                     </div>
+
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <div className="flex items-center">
                             <DocumentArrowUpIcon className="h-8 w-8 text-purple-500" />
+
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</p>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Today</h3>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    Last Uploaded
+                                </p>
+
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    {latestResume
+                                        ? new Date(latestResume.created_at).toLocaleDateString()
+                                        : 'None'}
+                                </h3>
                             </div>
                         </div>
                     </div>
@@ -78,6 +106,7 @@ export default function Resume() {
 
                 {/* Main Content Tabs */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+
                     <div className="border-b border-gray-200 dark:border-gray-700">
                         <nav className="flex space-x-8 px-6" aria-label="Tabs">
                             {['current', 'analysis', 'history'].map((tab) => (
@@ -101,111 +130,148 @@ export default function Resume() {
                     <div className="p-6">
                         {activeTab === 'current' && (
                             <div className="space-y-6">
-                                <div className="flex justify-between items-start p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{mockResume.title}</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Last updated: {mockResume.lastUpdated}</p>
-                                        <span className="inline-flex items-center px-2.5 py-0.5 mt-2 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {mockResume.status}
-                                        </span>
-                                    </div>
-                                    <div className="flex space-x-3">
-                                        <button className="text-gray-400 hover:text-gray-500">
-                                            <PencilSquareIcon className="h-5 w-5" />
-                                        </button>
-                                        <button className="text-gray-400 hover:text-gray-500">
-                                            <TrashIcon className="h-5 w-5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                                {resumes.length > 0 ? (
+                                    resumes.map((resume) => (
+                                        <div
+                                            key={resume.id}
+                                            className="flex flex-col gap-4 rounded-lg bg-gray-50 p-6 dark:bg-gray-700 md:flex-row md:items-start md:justify-between"
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-gray-800">
+                                                    <DocumentTextIcon className="h-6 w-6 text-blue-500" />
+                                                </div>
 
-                        {activeTab === 'analysis' && (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Overall Score */}
-                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Overall Score</h3>
-                                        <div className="flex items-center">
-                                            <div className="relative h-32 w-32">
-                                                <svg className="h-full w-full" viewBox="0 0 36 36">
-                                                    <path
-                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                        fill="none"
-                                                        stroke="#E5E7EB"
-                                                        strokeWidth="3"
-                                                    />
-                                                    <path
-                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                        fill="none"
-                                                        stroke="#3B82F6"
-                                                        strokeWidth="3"
-                                                        strokeDasharray={`${resumeScore.overall}, 100`}
-                                                    />
-                                                </svg>
-                                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-blue-600">
-                                                    {resumeScore.overall}%
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        {resume.original_file_name}
+                                                    </h3>
+
+                                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                        Uploaded{' '}
+                                                        {new Date(
+                                                            resume.created_at
+                                                        ).toLocaleDateString()}
+                                                    </p>
+
+                                                    <span className="mt-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                                        Uploaded
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <div className="ml-6 space-y-2">
-                                                {Object.entries(resumeScore).map(([key, value]) => (
-                                                    key !== 'overall' && (
-                                                        <div key={key} className="flex items-center">
-                                                            <span className="text-sm text-gray-500 dark:text-gray-400 w-24">
-                                                                {key.charAt(0).toUpperCase() + key.slice(1)}:
-                                                            </span>
-                                                            <div className="w-48 h-2 bg-gray-200 rounded-full">
-                                                                <div
-                                                                    className="h-2 bg-blue-600 rounded-full"
-                                                                    style={{ width: `${value}%` }}
-                                                                />
-                                                            </div>
-                                                            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}%</span>
-                                                        </div>
-                                                    )
-                                                ))}
+
+                                            <div className="flex items-center gap-3">
+                                                <a
+                                                    href={`/storage/${resume.file_path}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800"
+                                                >
+                                                    <DocumentTextIcon className="h-5 w-5" />
+                                                    View
+                                                </a>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setResumeToDelete(resume)}
+                                                    className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-white dark:hover:bg-gray-800"
+                                                >
+                                                    <TrashIcon className="h-5 w-5" />
+                                                    Delete
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
+                                    ))
+                                ) : (
+                                    <div className="rounded-lg bg-gray-50 px-6 py-12 text-center dark:bg-gray-700">
+                                        <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
 
-                                    {/* Improvement Suggestions */}
-                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Suggestions</h3>
-                                        <ul className="space-y-3">
-                                            <li className="flex items-start">
-                                                <span className="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
-                                                <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">Add more specific achievements</span>
-                                            </li>
-                                            <li className="flex items-start">
-                                                <span className="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
-                                                <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">Include relevant certifications</span>
-                                            </li>
-                                            <li className="flex items-start">
-                                                <span className="flex-shrink-0 h-5 w-5 text-green-500">✓</span>
-                                                <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">Optimize keywords for ATS</span>
-                                            </li>
-                                        </ul>
+                                        <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                                            No resume uploaded
+                                        </h3>
+
+                                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                            Upload your resume to start analyzing your experience and
+                                            improving your job matches.
+                                        </p>
+
+                                        <Link
+                                            href={route('resume.new')}
+                                            className="mt-6 inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                                        >
+                                            <PlusIcon className="h-5 w-5" />
+                                            Upload Resume
+                                        </Link>
                                     </div>
-                                </div>
+                                )}
+                            </div>
+                        )}
+                        {activeTab === 'analysis' && (
+                            <div className="rounded-lg bg-gray-50 px-6 py-12 text-center dark:bg-gray-700">
+                                <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
+
+                                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                                    Resume analysis coming next
+                                </h3>
+
+                                <p className="mx-auto mt-2 max-w-lg text-sm text-gray-500 dark:text-gray-400">
+                                    Once your resume is uploaded, BeHirable will analyze your
+                                    experience, skills, formatting and ATS compatibility.
+                                </p>
+
+                                {/* {latestResume && (
+                                    <Link
+                                        href={route('resume.analysis')}
+                                        className="mt-6 inline-flex items-center rounded-md bg-gray-400 px-4 py-2 text-sm font-medium text-white"
+                                    >
+                                        Analysis will be available soon
+                                    </Link>
+                                )} */}
                             </div>
                         )}
 
+                        {/* History Panenl */}
                         {activeTab === 'history' && (
-                            <div className="space-y-4">
-                                <div className="border-l-4 border-blue-500 pl-4 py-2">
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Today</p>
-                                    <p className="text-base text-gray-900 dark:text-white">Updated work experience section</p>
-                                </div>
-                                <div className="border-l-4 border-gray-300 pl-4 py-2">
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Yesterday</p>
-                                    <p className="text-base text-gray-900 dark:text-white">Added new skills</p>
-                                </div>
+                            <div className="rounded-lg bg-gray-50 px-6 py-12 text-center dark:bg-gray-700">
+                                <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
+
+                                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                                    Resume history
+                                </h3>
+
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    Resume versions and analysis history will appear here.
+                                </p>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+            <ConfirmDialog
+                open={resumeToDelete !== null}
+                title="Delete resume?"
+                message={
+                    resumeToDelete
+                        ? `Are you sure you want to delete "${resumeToDelete.original_file_name}"? This action cannot be undone.`
+                        : ''
+                }
+                confirmLabel="Delete Resume"
+                cancelLabel="Cancel"
+                onCancel={() => setResumeToDelete(null)}
+                onConfirm={() => {
+                    if (!resumeToDelete) {
+                        return;
+                    }
+
+                    router.delete(
+                        route('resume.destroy', resumeToDelete.id),
+                        {
+                            onFinish: () => {
+                                setResumeToDelete(null);
+                            },
+                        }
+                    );
+                }}
+            />
         </SidebarLayout>
     );
 }
