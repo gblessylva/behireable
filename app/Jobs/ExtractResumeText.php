@@ -57,9 +57,6 @@ class ExtractResumeText implements ShouldQueue {
 
 			$normalizedText = $normalizer->normalize( $text );
 
-            error_log($text);
-            error_log($normalizedText);
-
 			if ( $normalizedText === '' ) {
 				throw new \RuntimeException(
 					'Resume text could not be normalized.'
