@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Resume;
+use App\Jobs\ParseResume;
 use App\Services\ResumeTextExtractor;
 use App\Services\ResumeTextNormalizer;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,13 +29,17 @@ class ExtractResumeText implements ShouldQueue {
 		$this->resume->update(
 			array(
 				'extraction_status' => 'processing',
+				'parsing_status'    => 'pending',
 				'extraction_error'  => null,
 				'extracted_text'    => null,
 				'normalized_text'   => null,
+				'parsed_data'       => null,
 				'extracted_at'      => null,
+				'normalized_at'     => null,
 			)
 		);
 
+		ParseResume::dispatch( $this->resume );
 		try {
 			$extension = pathinfo(
 				$this->resume->original_file_name,
