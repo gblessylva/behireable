@@ -202,19 +202,41 @@ class ResumeParser {
 	}
 
 	protected function isSectionHeading( string $line ): bool {
+		$line = trim( $line );
+
+		// Remove Markdown heading markers.
+		$line = preg_replace( '/^#{1,6}\s*/', '', $line ) ?? $line;
+
+		// Remove trailing punctuation.
+		$line = preg_replace( '/[:\-–—]+$/u', '', $line ) ?? $line;
+
 		$headings = array(
 			'summary',
 			'professional summary',
 			'profile',
+			'professional profile',
 			'skills',
 			'technical skills',
+			'core skills',
+			'key skills',
+			'technical expertise',
+			'core competencies',
 			'experience',
 			'work experience',
 			'professional experience',
+			'work history',
+			'career history',
+			'employment history',
 			'education',
+			'educational background',
+			'academic background',
 			'certifications',
+			'professional certifications',
 			'projects',
+			'personal projects',
+			'professional projects',
 			'languages',
+			'language skills',
 			'references',
 		);
 

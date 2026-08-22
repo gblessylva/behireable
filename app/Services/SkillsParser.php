@@ -5,17 +5,74 @@ namespace App\Services;
 class SkillsParser {
 
 	/**
-	 * Parse a resume skills section.
-	 *
-	 * Returns:
-	 *
-	 * [
-	 *     [
-	 *         'name' => 'PHP',
-	 *         'category' => 'Languages',
-	 *     ],
-	 * ]
+	 * Known technologies/skills that can be extracted from
+	 * competency-style resume statements.
 	 */
+	protected array $knownSkills = array(
+		// Programming languages
+		'PHP',
+		'JavaScript',
+		'TypeScript',
+		'Python',
+		'Java',
+		'C#',
+		'C++',
+		'Ruby',
+		'Go',
+		'Rust',
+
+		// Frontend
+		'HTML',
+		'CSS',
+		'SCSS',
+		'SASS',
+		'React',
+		'React JS',
+		'Vue',
+		'Angular',
+		'jQuery',
+		'Next.js',
+		'NextJS',
+
+		// WordPress
+		'WordPress',
+		'WooCommerce',
+		'Gutenberg',
+		'Elementor',
+		'WPBakery',
+
+		// Backend/frameworks
+		'Laravel',
+		'Symfony',
+		'Node.js',
+		'NodeJS',
+		'Express',
+		'NestJS',
+
+		// Databases
+		'MySQL',
+		'PostgreSQL',
+		'MongoDB',
+		'Redis',
+
+		// Tools
+		'Git',
+		'GitHub',
+		'GitLab',
+		'Composer',
+		'NPM',
+		'Yarn',
+		'Docker',
+
+		// APIs / technologies
+		'REST API',
+		'GraphQL',
+		'JWT',
+		'AWS',
+		'Azure',
+		'Google Cloud',
+	);
+
 	public function parse( string $text ): array {
 		if ( trim( $text ) === '' ) {
 			return array();
@@ -28,32 +85,65 @@ class SkillsParser {
 		$currentCategory = null;
 
 		foreach ( $lines as $line ) {
-			$line = $this->cleanLine( $line );
+
+			$line = trim( $line );
 
 			if ( $line === '' ) {
 				continue;
 			}
 
 			/*
-			 * Detect category-style lines such as:
-			 *
-			 * Languages:
-			 * WordPress Development:
-			 * Backend Development:
-			 * Development Tools
-			 */
+			* Detect the category BEFORE removing Markdown list markers.
+			*
+			* This allows:
+			*
+			* WordPress:
+			*
+			* to be treated as a category while:
+			*
+			* - WordPress
+			*
+			* remains a skill.
+			*/
 			$category = $this->detectCategory( $line );
 
 			if ( $category !== null ) {
 				$currentCategory = $category;
 
-				continue;
+				/*
+				 * If the category has content after the colon:
+				 *
+				 * WordPress: WordPress, WooCommerce
+				 *
+				 * parse that content as skills.
+				 */
+				$parts = preg_split(
+					'/:\s*/u',
+					$line,
+					2
+				);
+
+				$line = trim( $parts[1] ?? '' );
+
+				if ( $line === '' ) {
+					continue;
+				}
 			}
 
 			/*
-			 * A line may contain multiple comma/semicolon separated skills.
-			 */
+			* Only now remove Markdown list markers.
+			*/
+			$line = $this->cleanLine( $line );
+
+			if ( $line === '' ) {
+				continue;
+			}
+
 			$lineSkills = $this->splitSkills( $line );
+
+			if ( $this->looksLikeSentence( $line ) ) {
+				$lineSkills = $this->extractKnownSkills( $line );
+			}
 
 			foreach ( $lineSkills as $skill ) {
 				$skill = $this->cleanSkill( $skill );
@@ -75,53 +165,56 @@ class SkillsParser {
 	protected function cleanLine( string $line ): string {
 		$line = trim( $line );
 
-		/*
-		 * Remove common Markdown list markers.
-		 */
-		$line = preg_replace( '/^[-*•▪◦]+\s*/u', '', $line ) ?? $line;
+		// Markdown list markers.
+		$line = preg_replace(
+			'/^[-*•▪◦]+\s*/u',
+			'',
+			$line
+		) ?? $line;
 
 		return trim( $line );
 	}
 
-	/**
-	 * Detect whether a line is a skill category.
-	 */
 	protected function detectCategory( string $line ): ?string {
 		$line = trim( $line );
 
 		/*
-		 * Explicit category syntax:
-		 *
-		 * Languages:
-		 * Backend Development:
-		 */
-		if ( preg_match( '/^(.+?):\s*$/u', $line, $matches ) ) {
-			$category = trim( $matches[1] );
-
-			if ( $this->looksLikeCategory( $category ) ) {
-				return $category;
-			}
+		* A category should normally be explicitly followed by a colon.
+		*
+		* Examples:
+		*
+		* WordPress:
+		* Frontend:
+		* Databases:
+		* Development Tools:
+		*/
+		if ( ! preg_match( '/^(.+?):\s*(.*)$/u', $line, $matches ) ) {
+			return null;
 		}
 
-		/*
-		 * Known category names without a colon.
-		 */
-		$normalized = mb_strtolower( $line );
+		$category = trim( $matches[1] );
+
+		if ( ! $this->looksLikeCategory( $category ) ) {
+			return null;
+		}
+
+		return $category;
+	}
+
+	protected function looksLikeCategory( string $value ): bool {
+		$normalized = mb_strtolower( trim( $value ) );
 
 		$knownCategories = array(
 			'languages',
 			'wordpress',
-			'wordpress development',
-			'backend development',
-			'frontend development',
-			'frontend',
 			'backend',
-			'databases',
+			'frontend',
 			'database',
+			'databases',
+			'development',
 			'development tools',
 			'tools',
-			'development tools & package managers',
-			'build tools & package managers',
+			'package managers',
 			'version control',
 			'api integration',
 			'website operations',
@@ -135,82 +228,94 @@ class SkillsParser {
 			'core competencies',
 		);
 
-		if ( in_array( $normalized, $knownCategories, true ) ) {
-			return $line;
-		}
-
-		return null;
+		return in_array( $normalized, $knownCategories, true );
 	}
 
-	protected function looksLikeCategory( string $value ): bool {
-		$normalized = mb_strtolower( trim( $value ) );
-
-		$knownKeywords = array(
-			'language',
-			'wordpress',
-			'backend',
-			'frontend',
-			'database',
-			'development',
-			'tool',
-			'package',
-			'version control',
-			'api',
-			'website',
-			'cloud',
-			'testing',
-			'framework',
-			'library',
-			'competenc',
-			'expertise',
-			'soft skill',
-		);
-
-		foreach ( $knownKeywords as $keyword ) {
-			if ( str_contains( $normalized, $keyword ) ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Split a line containing multiple skills.
-	 */
 	protected function splitSkills( string $line ): array {
-		/*
-		 * Don't split on commas inside parentheses.
-		 */
-		$skills = preg_split(
-			'/\s*[,;|]\s*/u',
-			$line
-		);
-
 		return array_values(
 			array_filter(
-				$skills ?: array(),
+				preg_split(
+					'/\s*[,;|]\s*/u',
+					$line
+				) ?: array(),
 				static fn ( $skill ) => trim( $skill ) !== ''
 			)
 		);
 	}
 
+	/**
+	 * Determine whether the line is a competency sentence.
+	 */
+	protected function looksLikeSentence( string $line ): bool {
+		$wordCount = preg_match_all( '/\b[\p{L}\d]+\b/u', $line );
+
+		if ( $wordCount === false ) {
+			return false;
+		}
+
+		return $wordCount > 8;
+	}
+
+	/**
+	 * Extract explicitly known technologies from a sentence.
+	 */
+	protected function extractKnownSkills( string $line ): array {
+		$found = array();
+
+		/*
+		 * Sort longest names first so:
+		 *
+		 * React JS
+		 *
+		 * is detected before:
+		 *
+		 * React
+		 */
+		$skills = $this->knownSkills;
+
+		usort(
+			$skills,
+			static fn ( $a, $b ) => mb_strlen( $b ) <=> mb_strlen( $a )
+		);
+
+		foreach ( $skills as $skill ) {
+			$pattern = '/(?<![\p{L}\d])'
+				. preg_quote( $skill, '/' )
+				. '(?![\p{L}\d])/iu';
+
+			if ( preg_match( $pattern, $line ) ) {
+				$found[] = $skill;
+			}
+		}
+
+		return $found;
+	}
+
 	protected function cleanSkill( string $skill ): string {
 		$skill = trim( $skill );
 
-		/*
-		 * Remove common Markdown formatting.
-		 */
-		$skill = preg_replace( '/\*\*(.*?)\*\*/u', '$1', $skill ) ?? $skill;
-		$skill = preg_replace( '/__(.*?)__/u', '$1', $skill ) ?? $skill;
-		$skill = preg_replace( '/`(.*?)`/u', '$1', $skill ) ?? $skill;
+		// Markdown formatting.
+		$skill = preg_replace(
+			'/\*\*(.*?)\*\*/u',
+			'$1',
+			$skill
+		) ?? $skill;
+
+		$skill = preg_replace(
+			'/__(.*?)__/u',
+			'$1',
+			$skill
+		) ?? $skill;
+
+		$skill = preg_replace(
+			'/`(.*?)`/u',
+			'$1',
+			$skill
+		) ?? $skill;
 
 		return trim( $skill );
 	}
 
-	/**
-	 * Remove duplicate skills while preserving order.
-	 */
 	protected function removeDuplicates( array $skills ): array {
 		$seen   = array();
 		$result = array();

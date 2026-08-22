@@ -73,15 +73,41 @@ class ResumeSectionDetector {
 	 * Normalize headings before matching them.
 	 */
 	protected function normalizeHeading( string $heading ): string {
-		$heading = mb_strtolower( trim( $heading ) );
+		$heading = trim( $heading );
 
-		// Remove punctuation commonly used after headings.
-		$heading = preg_replace( '/[:\-–—]+$/u', '', $heading ) ?? $heading;
+		/*
+		* Remove Markdown heading markers.
+		*
+		* Examples:
+		*
+		* # Skills
+		* ## Skills
+		* ### Professional Experience
+		*/
+		$heading = preg_replace( '/^#{1,6}\s*/', '', $heading ) ?? $heading;
 
-		// Collapse whitespace.
-		$heading = preg_replace( '/\s+/u', ' ', $heading ) ?? $heading;
+		/*
+		* Remove common heading punctuation.
+		*/
+		$heading = preg_replace(
+			'/[:\-–—]+$/u',
+			'',
+			$heading
+		) ?? $heading;
 
-		return trim( $heading );
+		/*
+		* Collapse whitespace.
+		*/
+		$heading = preg_replace(
+			'/\s+/u',
+			' ',
+			$heading
+		) ?? $heading;
+
+		/*
+		* Compare headings case-insensitively.
+		*/
+		return mb_strtolower( trim( $heading ) );
 	}
 
 	/**
